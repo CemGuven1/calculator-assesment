@@ -15,6 +15,9 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    // Undo vi.stubGlobal (e.g. a mocked fetch) and vi.stubEnv after each test.
+    unstubGlobals: true,
+    unstubEnvs: true,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],

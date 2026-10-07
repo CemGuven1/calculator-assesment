@@ -48,3 +48,11 @@ Followed by the full assignment brief, pasted unchanged.
 > errors to the right status codes, all with the same error body. Add GET /health,
 > CORS for the dev origin, slog request logging, and graceful shutdown in main.
 > Test the handlers with httptest, including every bad-input case.
+
+## 6. Frontend: API client and state
+
+> Create a typed API client in src/api/ that matches the backend contract. Read the
+> base URL from an env variable and add a Vite dev proxy. Turn backend error codes
+> into user-friendly messages. Keep calculator state (input, result, loading, error)
+> in a pure reducer behind a useCalculator hook. Unit-test the reducer and the client
+> with a mocked fetch.

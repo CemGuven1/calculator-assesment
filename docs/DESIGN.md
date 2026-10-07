@@ -11,8 +11,8 @@ calculator/
 │       └── api/                 routing, JSON decode/validate, error → status, middleware
 ├── frontend/                    Vite + React + TS (runtime deps: react, react-dom only)
 │   └── src/
-│       ├── api/                 typed fetch client
-│       ├── lib/                 pure helpers: input validation, result formatting
+│       ├── api/                 typed fetch client, contract types, user-facing error messages
+│       ├── calculator/          operations, input parsing, state reducer, useCalculator hook
 │       └── components/          Calculator UI
 ├── docs/DESIGN.md
 ├── Dockerfile                   multi-stage: node build → go build → minimal runtime
@@ -89,8 +89,9 @@ Operation names are lowercase and case-sensitive. `code` is stable and meant for
   checks status, `Content-Type` and the exact JSON body.
 
 **Frontend** (Vitest + Testing Library + jsdom, `@vitest/coverage-v8`)
-- Pure units: input parsing, result formatting, and the API client. The client turns each
-  outcome (2xx, 4xx error body, non-JSON body, network failure) into a typed result.
+- Pure units: input parsing, the state reducer, error messages, and the API client with a
+  mocked `fetch`. The client turns each outcome (2xx, 4xx error body, non-JSON body, network
+  failure) into a typed result.
 - Components, with `fetch` mocked: `sqrt` hides the second input; invalid input shows an
   inline error and sends no request; success shows the result; 422 and network failures
   show a message; the button is disabled while loading.
@@ -105,7 +106,8 @@ validation awkward. A form maps 1:1 onto the API.
   `type="number"` reports partial input like `1e` as empty, so validation would be wrong.
   Our parser accepts `-3.5` and `1e3`. It rejects empty input, `abc`, `1..2` and `Infinity`.
 - The frontend validates **input shape only**: required, finite number. The math rules
-  (÷0, √−x) live only in Go, and the UI shows the server's `message`. No rule exists in two places.
+  (÷0, √−x) live only in Go. The UI turns the server's error `code` into a friendly message.
+  No rule exists in two places.
 - The result shows the full expression, e.g. `15% of 200 = 30`, rounded to 15 significant digits.
 - Errors appear in a `role="alert"` region. Invalid fields get `aria-invalid` and `aria-describedby`.
 - Plain CSS with variables, built for mobile first: one column under 480px and 44px touch targets.
