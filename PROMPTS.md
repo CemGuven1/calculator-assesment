@@ -40,3 +40,11 @@ Followed by the full assignment brief, pasted unchanged.
 > multiply, divide, power, sqrt, percentage. Return typed errors (ErrDivisionByZero,
 > ErrInvalidOperand, ...) and reject NaN/Inf results. Write table-driven tests first.
 > Cover normal cases, negatives, decimals and every edge case in DESIGN.md.
+
+## 5. Backend: HTTP API
+
+> Add internal/api using net/http (Go 1.22+ routing). Decode JSON strictly
+> (DisallowUnknownFields, MaxBytesReader) and validate the input. Map the calculator
+> errors to the right status codes, all with the same error body. Add GET /health,
+> CORS for the dev origin, slog request logging, and graceful shutdown in main.
+> Test the handlers with httptest, including every bad-input case.

@@ -5,7 +5,7 @@
 ```
 calculator/
 ├── backend/                     Go 1.25, standard library only
-│   ├── cmd/server/main.go       config (PORT, STATIC_DIR), wiring, graceful shutdown
+│   ├── cmd/server/main.go       config (env vars), wiring, graceful shutdown
 │   └── internal/
 │       ├── calculator/          pure domain: operation registry, arity, domain errors
 │       └── api/                 routing, JSON decode/validate, error → status, middleware
@@ -21,15 +21,17 @@ calculator/
 ```
 
 `calculator` has no HTTP imports, so the math is tested without a server. In dev, Vite proxies
-`/api` to Go on `:8080`. In Docker, the Go binary also serves the built SPA from `STATIC_DIR`.
-Same origin in both cases, so no CORS.
+`/api` to Go on `127.0.0.1:8080`. In Docker, the Go binary also serves the built SPA from
+`STATIC_DIR`. Either way the browser sees a single origin. CORS is still enabled for the Vite dev
+origin (configurable with `CORS_ORIGINS`), so the API can also be called from it directly.
 
 ## 2. API contract
 
 **Decision: one `POST /api/v1/calculate`, operation named in the body.** An operation is data,
 not a resource. One handler, one validation path and one registry (`name → arity, func`) means
 adding an operation is a single table entry. The frontend needs one client function. Trade-off:
-an unknown operation returns 400 instead of a routing 404. Also: `GET /api/v1/health` → `{"status":"ok"}`.
+an unknown operation returns 400 instead of a routing 404. Also: `GET /health` → `{"status":"ok"}`,
+outside the versioned API so infrastructure health checks don't depend on the API version.
 
 ```jsonc
 // Request: operands is always an array whose length must equal the operation's arity

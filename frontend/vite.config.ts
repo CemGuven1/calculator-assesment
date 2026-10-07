@@ -6,9 +6,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     // Forward API calls to the Go backend in development, so the browser sees
-    // a single origin and no CORS configuration is needed.
+    // a single origin. The IP avoids Node resolving "localhost" to IPv6 (::1)
+    // while the backend listens on IPv4.
     proxy: {
-      '/api': 'http://localhost:8080',
+      '/api': 'http://127.0.0.1:8080',
     },
   },
   test: {
