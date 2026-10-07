@@ -1,7 +1,10 @@
+import { Calculator } from './components/Calculator.tsx'
+
 function App() {
   return (
-    <main>
-      <h1>Calculator</h1>
+    <main className="app">
+      <h1 className="app-title">Calculator</h1>
+      <Calculator />
     </main>
   )
 }

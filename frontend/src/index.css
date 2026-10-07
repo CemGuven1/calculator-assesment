@@ -1,6 +1,38 @@
 :root {
+  color-scheme: light dark;
+
+  --bg: #f3f4f6;
+  --surface: #ffffff;
+  --text: #111827;
+  --muted: #4b5563;
+  --border: #d1d5db;
+  --accent: #2563eb;
+  --accent-text: #ffffff;
+  --focus: #1d4ed8;
+  --danger: #b42318;
+  --danger-bg: #fdecea;
+  --radius: 0.75rem;
+  --radius-small: 0.5rem;
+
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1115;
+    --surface: #1a1d24;
+    --text: #e5e7eb;
+    --muted: #a3aab8;
+    --border: #3a4150;
+    --accent: #5b93ff;
+    --accent-text: #0b1020;
+    --focus: #93b6ff;
+    --danger: #ff9b8f;
+    --danger-bg: #3b1d1b;
+  }
 }
 
 *,
@@ -11,4 +43,237 @@
 
 body {
   margin: 0;
+  background: var(--bg);
+}
+
+/* Layout: one column that is comfortable from 360px phones upwards. */
+
+.app {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.app-title {
+  margin: 0 0 1rem;
+  font-size: 1.5rem;
+}
+
+.calculator {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+@media (min-width: 30rem) {
+  .calculator {
+    padding: 1.5rem;
+  }
+}
+
+/* Shared label style for the legend and the field labels. */
+
+.operations legend,
+.field label {
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Operation picker: radio buttons styled as a grid of buttons. */
+
+.operations {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.operation-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.375rem;
+}
+
+.operation {
+  position: relative;
+}
+
+/* The real radio stays in place, invisible, so it keeps focus and clicks. */
+.operation input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.operation-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 3.25rem;
+  padding: 0.375rem 0.25rem;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+
+.operation-symbol {
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.operation-label {
+  font-size: 0.75rem;
+  line-height: 1.2;
+  color: var(--muted);
+}
+
+.operation:hover .operation-face {
+  border-color: var(--accent);
+}
+
+.operation input:checked + .operation-face {
+  color: var(--accent-text);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.operation input:checked + .operation-face .operation-label {
+  color: inherit;
+}
+
+.operation input:focus-visible + .operation-face {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Number fields: stacked on phones, side by side when there is room. */
+
+.fields {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 30rem) {
+  .fields-pair {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.field {
+  display: grid;
+  gap: 0.375rem;
+  align-content: start;
+  min-width: 0;
+}
+
+.field input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  /* 16px or more, so iOS does not zoom in on focus. */
+  font: inherit;
+  font-size: 1.125rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+
+.field input:focus-visible {
+  border-color: var(--focus);
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.field input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.field-error {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--danger);
+}
+
+/* Calculate button */
+
+.calculate {
+  min-height: 2.75rem;
+  padding: 0.625rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent-text);
+  background: var(--accent);
+  border: 0;
+  border-radius: var(--radius-small);
+  cursor: pointer;
+}
+
+.calculate:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.calculate[aria-disabled='true'] {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+/* Result panel. A minimum height keeps the layout from jumping. */
+
+.result-panel {
+  min-height: 6rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg);
+  border-radius: var(--radius-small);
+}
+
+.result-heading {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.result-hint,
+.result-expression {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.result-value {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.result-value-long {
+  font-size: 1.5rem;
+}
+
+.result-value-xlong {
+  font-size: 1.125rem;
+}
+
+.result-error {
+  margin: 0.25rem 0 0;
+  padding: 0.5rem 0.75rem;
+  color: var(--danger);
+  background: var(--danger-bg);
+  border-radius: var(--radius-small);
 }

@@ -72,7 +72,7 @@ export function calculatorReducer(state: CalculatorState, action: CalculatorActi
       if (state.status.kind === 'loading') {
         return state
       }
-      const fields: Field[] = OPERATIONS[state.operation].arity === 1 ? ['a'] : ['a', 'b']
+      const fields: Field[] = OPERATIONS[state.operation].operandLabels.length === 1 ? ['a'] : ['a', 'b']
       const operands: number[] = []
       const fieldErrors: Partial<Record<Field, string>> = {}
       for (const field of fields) {

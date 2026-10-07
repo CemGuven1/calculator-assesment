@@ -56,3 +56,12 @@ Followed by the full assignment brief, pasted unchanged.
 > into user-friendly messages. Keep calculator state (input, result, loading, error)
 > in a pure reducer behind a useCalculator hook. Unit-test the reducer and the client
 > with a mocked fetch.
+
+## 7. Frontend: UI
+
+> Build the calculator UI agreed in DESIGN.md. All math goes through the backend,
+> none happens in the browser. Validate input on the client (empty, non-numeric,
+> second decimal point). Show loading and error states, support the keyboard, use
+> accessible labels, and make it responsive down to 360px. Plain CSS, no UI library.
+> Use React Testing Library to test: a successful calculation, validation errors,
+> an API error shown to the user, and unary operations.

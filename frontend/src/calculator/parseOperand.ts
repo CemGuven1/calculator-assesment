@@ -5,6 +5,7 @@ export type ParseResult = { ok: true; value: number } | { ok: false; error: stri
 // hex, "Infinity" and the empty string.
 const NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i
 const DECIMAL_COMMA = /^[+-]?\d+,\d+$/
+const SECOND_POINT = /\..*\./
 
 /**
  * Parses the text of an input field into a finite number, or explains what is
@@ -18,6 +19,9 @@ export function parseOperand(text: string): ParseResult {
   }
   if (DECIMAL_COMMA.test(trimmed)) {
     return { ok: false, error: 'Use a dot for decimals, like 1.5.' }
+  }
+  if (SECOND_POINT.test(trimmed)) {
+    return { ok: false, error: 'A number can only have one decimal point.' }
   }
   if (!NUMBER.test(trimmed)) {
     return { ok: false, error: 'Enter a valid number, like -3.5 or 1e3.' }

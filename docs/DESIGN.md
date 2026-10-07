@@ -101,13 +101,20 @@ Operation names are lowercase and case-sensitive. `code` is stable and meant for
 
 **A form, not a keypad.** A keypad needs client-side state for button presses and makes per-field
 validation awkward. A form maps 1:1 onto the API.
-- Layout: Number A → operation buttons (segmented group) → Number B (hidden for `sqrt`) → **Calculate** (Enter submits).
-- Inputs are `type="text" inputMode="decimal"`, which still shows a numeric keypad on mobile.
-  `type="number"` reports partial input like `1e` as empty, so validation would be wrong.
-  Our parser accepts `-3.5` and `1e3`. It rejects empty input, `abc`, `1..2` and `Infinity`.
+- Layout: operation buttons (native radios styled as a grid; arrow keys change the choice) →
+  number fields labelled for the operation (the second is hidden for `sqrt`) → **Calculate**
+  (Enter submits) → result panel.
+- Inputs are plain `type="text"`. `type="number"` reports partial input like `1e` as empty, so
+  validation would be wrong, and `inputMode="decimal"` has no minus key on iOS.
+  Our parser accepts `-3.5` and `1e3`. It rejects empty input, `abc`, a second decimal point
+  and `Infinity`.
 - The frontend validates **input shape only**: required, finite number. The math rules
   (÷0, √−x) live only in Go. The UI turns the server's error `code` into a friendly message.
   No rule exists in two places.
 - The result shows the full expression, e.g. `15% of 200 = 30`, rounded to 15 significant digits.
-- Errors appear in a `role="alert"` region. Invalid fields get `aria-invalid` and `aria-describedby`.
-- Plain CSS with variables, built for mobile first: one column under 480px and 44px touch targets.
+- Errors appear in a `role="alert"` region. Invalid fields get `aria-invalid` and `aria-describedby`,
+  and focus moves to the first one after a failed submit. While a request runs, the button is
+  `aria-disabled` rather than `disabled`, which would drop keyboard focus.
+- Plain CSS with variables, built for mobile first and checked at 360px: fields side by side
+  from 480px, 44px touch targets, long results shrink to stay on one line, and dark mode
+  follows the system.
