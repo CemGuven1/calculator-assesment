@@ -1,0 +1,18 @@
+# Runs the whole app in one container at http://localhost:8080
+#
+#   docker compose up --build
+services:
+  calculator:
+    build: .
+    image: calculator:latest
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    # The server never writes to disk and needs no Linux capabilities.
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    # Longer than the server's 10-second graceful shutdown.
+    stop_grace_period: 15s

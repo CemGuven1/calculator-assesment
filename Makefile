@@ -3,7 +3,7 @@
 # command to run by hand where make is unavailable.
 
 .PHONY: install run run-backend run-frontend test test-backend test-frontend \
-	coverage coverage-backend coverage-frontend
+	coverage coverage-backend coverage-frontend docker-up docker-down
 
 install:
 	cd frontend && npm ci
@@ -34,3 +34,11 @@ coverage-backend:
 
 coverage-frontend:
 	cd frontend && npm run coverage
+
+# The whole app in one container at http://localhost:8080. The image build
+# runs both test suites, so a failing test stops it.
+docker-up:
+	docker compose up --build -d
+
+docker-down:
+	docker compose down

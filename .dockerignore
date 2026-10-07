@@ -1,0 +1,15 @@
+# Keep the build context small, and keep host-specific files out of the image.
+# node_modules in particular holds platform-specific binaries (this repo is
+# developed on Windows; the image is Linux), so the image installs its own.
+
+.git
+.claude
+**/node_modules
+frontend/dist
+**/coverage
+backend/coverage.out
+backend/coverage.html
+**/*.exe
+**/*.log
+**/.env
+**/*.local

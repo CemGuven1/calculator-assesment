@@ -65,3 +65,10 @@ Followed by the full assignment brief, pasted unchanged.
 > accessible labels, and make it responsive down to 360px. Plain CSS, no UI library.
 > Use React Testing Library to test: a successful calculation, validation errors,
 > an API error shown to the user, and unary operations.
+
+## 8. Docker and smoke test
+
+> Write a multi-stage Dockerfile that builds the frontend and the Go binary into one
+> image. Go serves both the static files and /api. Add docker-compose.yml and
+> .dockerignore. Then give me a smoke-test checklist (curl commands plus manual UI
+> steps) to check everything end to end.

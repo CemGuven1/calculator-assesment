@@ -14,8 +14,9 @@ calculator/
 │       ├── api/                 typed fetch client, contract types, user-facing error messages
 │       ├── calculator/          operations, input parsing, state reducer, useCalculator hook
 │       └── components/          Calculator UI
-├── docs/DESIGN.md
-├── Dockerfile                   multi-stage: node build → go build → minimal runtime
+├── docs/                        DESIGN.md, SMOKE_TEST.md
+├── Dockerfile                   multi-stage: node test+build → go test+build → distroless runtime
+├── docker-compose.yml           one service on :8080
 ├── README.md                    setup, run, API examples, decisions
 └── PROMPTS.md                   AI prompts used
 ```
