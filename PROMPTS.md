@@ -2,7 +2,8 @@
 
 The prompts used to build this project, in order, quoted as sent. The tool was
 Claude Code (Claude Opus 5.5) in the Claude desktop app. The assistant's replies
-are not included; the commit history shows what each step produced.
+are not included; the commit history shows what each step produced. Short
+housekeeping messages, such as approvals to commit and push, are left out.
 
 ## 1. Kick-off
 
@@ -72,3 +73,10 @@ Followed by the full assignment brief, pasted unchanged.
 > image. Go serves both the static files and /api. Add docker-compose.yml and
 > .dockerignore. Then give me a smoke-test checklist (curl commands plus manual UI
 > steps) to check everything end to end.
+
+## 9. Documentation, coverage report and CI
+
+> go ahead, include the GitHub Actions workflow too.
+
+This approved the proposed final phase: a full README, a coverage report, a last pass over
+this file, and a GitHub Actions workflow that runs both test suites on every push.

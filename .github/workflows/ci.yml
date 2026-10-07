@@ -1,0 +1,87 @@
+# Runs on every push to main and every pull request. The three jobs run in
+# parallel; each coverage report is uploaded as a downloadable artifact.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (Go)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: backend/go.mod
+          # Standard library only: there is no go.sum to key a cache on.
+          cache: false
+      - name: Check formatting
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - run: go vet ./...
+      - name: Test with the race detector and coverage
+        run: go test -race -coverprofile=coverage.out ./...
+      - name: Coverage report
+        run: |
+          go tool cover -func=coverage.out
+          go tool cover -html=coverage.out -o coverage.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: |
+            backend/coverage.out
+            backend/coverage.html
+
+  frontend:
+    name: Frontend (React)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - name: Test with coverage
+        run: npm run coverage
+      - name: Type-check and build
+        run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build the image (runs both test suites again)
+        run: docker build -t calculator .
+      - name: Smoke-test the running container
+        run: |
+          docker run -d --name calculator -p 8080:8080 calculator
+          for _ in $(seq 1 20); do curl -fs http://localhost:8080/health && break; sleep 0.5; done
+          echo
+          curl -fs http://localhost:8080/ | grep -q '<title>Calculator</title>'
+          calc() { curl -s -w ' %{http_code}' -H 'Content-Type: application/json' -d "$1" http://localhost:8080/api/v1/calculate; }
+          test "$(calc '{"operation":"add","operands":[2,3]}')" = '{"result":5} 200'
+          test "$(calc '{"operation":"divide","operands":[1,0]}')" = \
+            '{"error":{"code":"DIVISION_BY_ZERO","message":"division by zero"}} 422'
+          echo "Smoke test passed"
+      - name: Container logs
+        if: always()
+        run: docker logs calculator

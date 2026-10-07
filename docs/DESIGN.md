@@ -14,9 +14,10 @@ calculator/
 │       ├── api/                 typed fetch client, contract types, user-facing error messages
 │       ├── calculator/          operations, input parsing, state reducer, useCalculator hook
 │       └── components/          Calculator UI
-├── docs/                        DESIGN.md, SMOKE_TEST.md
+├── docs/                        DESIGN.md, SMOKE_TEST.md, COVERAGE.md
 ├── Dockerfile                   multi-stage: node test+build → go test+build → distroless runtime
 ├── docker-compose.yml           one service on :8080
+├── .github/workflows/ci.yml     CI: tests with coverage, lint, Docker build and smoke test
 ├── README.md                    setup, run, API examples, decisions
 └── PROMPTS.md                   AI prompts used
 ```
