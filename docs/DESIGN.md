@@ -40,7 +40,7 @@ an unknown operation returns 400 instead of a routing 404. Also: `GET /api/v1/he
 { "result": 2.5 }
 
 // 4xx/5xx: one shape for every error
-{ "error": { "code": "DIVISION_BY_ZERO", "message": "cannot divide by zero" } }
+{ "error": { "code": "DIVISION_BY_ZERO", "message": "division by zero" } }
 ```
 
 | `operation` | Arity | Result |

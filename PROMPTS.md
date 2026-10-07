@@ -27,26 +27,16 @@ Followed by the full assignment brief, pasted unchanged.
 > 4. Testing strategy for each layer, and the UI approach.
 > Keep it to one page. I'll save it as docs/DESIGN.md.
 
-## 3. Git setup
-
-> Yes initiate git please.
->
-> ```
-> git init
-> git add README.md
-> git commit -m "first commit"
-> git branch -M main
-> git remote add origin https://github.com/CemGuven1/calculator-assesment.git
-> git push -u origin main
-> ```
-
-> commit and push please.
-
-## 4. Scaffolding
+## 3. Scaffolding
 
 > Scaffold the repo from the approved design: a Go module with cmd/server,
 > internal/calculator and internal/api; a Vite React-TS app with Vitest and React
 > Testing Library; a root Makefile (run, test, coverage), .gitignore and .editorconfig.
 > No feature code yet. Just confirm `go test ./...` and `npm test` both pass.
 
-> commit and push please.
+## 4. Backend: calculator package
+
+> Implement internal/calculator as pure functions with no HTTP code: add, subtract,
+> multiply, divide, power, sqrt, percentage. Return typed errors (ErrDivisionByZero,
+> ErrInvalidOperand, ...) and reject NaN/Inf results. Write table-driven tests first.
+> Cover normal cases, negatives, decimals and every edge case in DESIGN.md.
