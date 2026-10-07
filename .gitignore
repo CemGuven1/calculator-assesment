@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build output
+frontend/dist/
+backend/bin/
+*.exe
+
+# Test coverage
+coverage/
+coverage.out
+coverage.html
+
+# Local environment
+.env
+*.local
+
+# Logs
+*.log
+
+# Editors and OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+*.sw?
