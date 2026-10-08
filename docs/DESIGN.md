@@ -18,6 +18,7 @@ calculator/
 ├── Dockerfile                   multi-stage: node test+build → go test+build → distroless runtime
 ├── docker-compose.yml           one service on :8080
 ├── .github/workflows/ci.yml     CI: tests with coverage, lint, Docker build and smoke test
+├── scripts/smoke-test.sh        checks every operation and error case against a running server
 ├── README.md                    setup, run, API examples, decisions
 └── PROMPTS.md                   AI prompts used
 ```
@@ -59,12 +60,14 @@ Operation names are lowercase and case-sensitive. `code` is stable and meant for
 ## 3. Edge cases
 
 **400** = the request is invalid. **422** = the request is valid, but the math has no real, finite answer.
+A 400 code says which part of the request is wrong. The parts are checked in the order a client
+would fix them: the body as a whole, then the operation, then the operands.
 
 | Case | Status | `code` |
 |---|---|---|
-| Malformed JSON, wrong type (`"5"`), unknown field, trailing data, number beyond float64 (`1e400`) | 400 | `INVALID_REQUEST` |
-| `operation` missing, empty or unknown | 400 | `UNKNOWN_OPERATION` |
-| `operands` missing, `null`, wrong count, or containing `null`¹ | 400 | `INVALID_OPERANDS` |
+| Body empty, not JSON, or not a single object; a field that is unknown, misspelled, in the wrong case or repeated¹ | 400 | `INVALID_REQUEST` |
+| `operation` missing, empty, not a string, or unknown | 400 | `UNKNOWN_OPERATION` |
+| `operands` missing, not an array, or the wrong count; an operand that is `null`, not a number, or beyond float64 (`1e400`, `1e-400`)¹ | 400 | `INVALID_OPERANDS` |
 | `divide` by 0; `power` with a = 0, b < 0 | 422 | `DIVISION_BY_ZERO` |
 | `sqrt` of a negative; `power` with a < 0 and non-integer b | 422 | `DOMAIN_ERROR` |
 | Result overflows to ±Inf (`1e308 × 10`) | 422 | `OVERFLOW` |
@@ -73,7 +76,10 @@ Operation names are lowercase and case-sensitive. `code` is stable and meant for
 | Wrong method / unknown `/api` path | 405 / 404 | `METHOD_NOT_ALLOWED` / `NOT_FOUND` |
 | Panic | 500 | `INTERNAL` (recovered; details only in logs) |
 
-¹ Go silently decodes a `null` array element as `0`. Operands are decoded as `[]*float64` and any nil is rejected.
+¹ `encoding/json` alone is too lenient. It reads `OPERATION` as `operation`, lets a repeated
+field replace the first, and reads a `null` operand, or one too small for float64, as `0`. So a
+first pass over the JSON tokens checks field names exactly, and each operand is decoded on its own
+with a message naming its position, e.g. `operands[1] must be a number, got null`.
 
 - Explicit checks run first so messages are precise.
 - A final guard then checks every result: NaN → `DOMAIN_ERROR`, ±Inf → `OVERFLOW`. NaN/Inf can never be serialized.
@@ -93,11 +99,12 @@ Operation names are lowercase and case-sensitive. `code` is stable and meant for
 **Frontend** (Vitest + Testing Library + jsdom, `@vitest/coverage-v8`)
 - Pure units: input parsing, the state reducer, error messages, and the API client with a
   mocked `fetch`. The client turns each outcome (2xx, 4xx error body, non-JSON body, network
-  failure) into a typed result.
+  failure, no answer within 10 seconds) into a typed result.
 - Components, with `fetch` mocked: `sqrt` hides the second input; invalid input shows an
   inline error and sends no request; success shows the result; 422 and network failures
   show a message; the button is disabled while loading.
-- No browser end-to-end tests, to fit the time budget. The Docker image is smoke-tested with the README's curl examples.
+- No browser end-to-end tests, to fit the time budget. Instead, `scripts/smoke-test.sh` checks
+  every operation and error case against a running server, and CI runs it against the Docker image.
 
 ## 5. UI approach
 
@@ -108,12 +115,18 @@ validation awkward. A form maps 1:1 onto the API.
   (Enter submits) → result panel.
 - Inputs are plain `type="text"`. `type="number"` reports partial input like `1e` as empty, so
   validation would be wrong, and `inputMode="decimal"` has no minus key on iOS.
-  Our parser accepts `-3.5` and `1e3`. It rejects empty input, `abc`, a second decimal point
-  and `Infinity`.
+  Our parser accepts `-3.5` and `1e3`. It rejects empty input, `abc`, a second decimal point,
+  `Infinity`, and numbers beyond float64. A comma or space inside a number gets one hint that
+  covers both decimal commas and thousands separators, so following it never turns `1,000` into
+  `1.000`, which is 1.
 - The frontend validates **input shape only**: required, finite number. The math rules
   (÷0, √−x) live only in Go. The UI turns the server's error `code` into a friendly message.
   No rule exists in two places.
-- The result shows the full expression, e.g. `15% of 200 = 30`, rounded to 15 significant digits.
+- The result shows the full expression, e.g. `15% of 200 = 30`. Whole numbers up to 2^53 are
+  exact in float64 and keep every digit. Other values are rounded to 15 significant digits,
+  which hides float64 noise, and from 10^15 up they use exponent form, so rounding never
+  produces trailing zeros that look exact.
+- The client gives up after 10 seconds, so a stalled proxy can't leave "Calculating…" on screen.
 - Errors appear in a `role="alert"` region. Invalid fields get `aria-invalid` and `aria-describedby`,
   and focus moves to the first one after a failed submit. While a request runs, the button is
   `aria-disabled` rather than `disabled`, which would drop keyboard focus.

@@ -80,3 +80,30 @@ Followed by the full assignment brief, pasted unchanged.
 
 This approved the proposed final phase: a full README, a coverage report, a last pass over
 this file, and a GitHub Actions workflow that runs both test suites on every push.
+
+## 10. Senior review
+
+> Review the repo as a senior engineer would for a hiring assessment.
+> 1. Run both coverage commands yourself.
+> 2. Check the tests catch real bugs: break the 3 most important checks
+>    (e.g. division by zero) one at a time, confirm a test fails, then undo.
+> 3. List findings by severity: bugs, untested edge cases, inconsistent error
+>    handling, non-idiomatic Go or React. Wait for me to pick which to fix.
+> After the fixes, save the final coverage numbers and how to regenerate them
+> in docs/COVERAGE.md.
+
+> I made the repo public. go through it again.
+
+## 11. Fixes, README and final check
+
+> fix everything you encountered. Then Write README.md with: an overview, prerequisites, how
+> to run the backend, frontend and Docker, how to run tests and coverage, an API reference
+> with a curl example for each operation and each error case, and a "Design decisions &
+> assumptions" section (from DESIGN.md, with trade-offs and what I'd do with more time).
+> Check that every command in it works.
+>
+> Final check: Check the repo against the original assessment. Map every requirement and
+> deliverable to where the repo meets it, and flag anything missing. Then check that a fresh
+> clone runs using only the README.
+>
+> you can leave 16-18
