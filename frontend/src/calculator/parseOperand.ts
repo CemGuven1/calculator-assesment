@@ -4,7 +4,10 @@ export type ParseResult = { ok: true; value: number } | { ok: false; error: stri
 // point, as in .5), and an optional exponent. Unlike Number(), this rejects
 // hex, "Infinity" and the empty string.
 const NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i
-const DECIMAL_COMMA = /^[+-]?\d+,\d+$/
+// A comma or space inside a number: a decimal comma (1,5) or a thousands
+// separator (1,000 or 1 000). The hint covers both, so that following it
+// never turns 1,000 into 1.000, which is 1.
+const SEPARATOR = /[,\s]/
 const SECOND_POINT = /\..*\./
 
 /**
@@ -17,8 +20,8 @@ export function parseOperand(text: string): ParseResult {
   if (trimmed === '') {
     return { ok: false, error: 'Enter a number.' }
   }
-  if (DECIMAL_COMMA.test(trimmed)) {
-    return { ok: false, error: 'Use a dot for decimals, like 1.5.' }
+  if (SEPARATOR.test(trimmed)) {
+    return { ok: false, error: 'Use a dot for decimals and no thousands separators, like 1500 or 1.5.' }
   }
   if (SECOND_POINT.test(trimmed)) {
     return { ok: false, error: 'A number can only have one decimal point.' }
@@ -29,6 +32,11 @@ export function parseOperand(text: string): ParseResult {
   const value = Number(trimmed)
   if (!Number.isFinite(value)) {
     return { ok: false, error: 'This number is too large.' }
+  }
+  // Number() turns a non-zero number too close to zero for float64 into 0.
+  const mantissa = trimmed.toLowerCase().split('e')[0]
+  if (value === 0 && /[1-9]/.test(mantissa)) {
+    return { ok: false, error: 'This number is too small.' }
   }
   return { ok: true, value }
 }

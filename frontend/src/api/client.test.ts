@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { jsonResponse } from '../test/http.ts'
-import { calculate } from './client.ts'
+import { calculate, REQUEST_TIMEOUT_MS } from './client.ts'
 
 const fetchMock = vi.fn<typeof fetch>()
 
@@ -10,19 +10,56 @@ beforeEach(() => {
   vi.stubEnv('VITE_API_BASE_URL', '')
 })
 
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
+/** Behaves like fetch for a server that never answers: it only settles, by rejecting, when the request is aborted. */
+function hangingFetch(_input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  return new Promise((_resolve, reject) => {
+    const signal = init?.signal
+    if (signal?.aborted) {
+      reject(signal.reason)
+    }
+    signal?.addEventListener('abort', () => reject(signal.reason))
+  })
+}
+
 describe('calculate', () => {
   it('POSTs the operation and operands as JSON', async () => {
     fetchMock.mockResolvedValue(jsonResponse(200, { result: 2.5 }))
-    const signal = new AbortController().signal
 
-    await calculate('divide', [10, 4], signal)
+    await calculate('divide', [10, 4])
 
     expect(fetchMock).toHaveBeenCalledExactlyOnceWith('/api/v1/calculate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: '{"operation":"divide","operands":[10,4]}',
-      signal,
+      signal: expect.any(AbortSignal),
     })
+  })
+
+  it('cancels the request when the caller aborts', () => {
+    fetchMock.mockImplementation(hangingFetch)
+    const controller = new AbortController()
+
+    void calculate('add', [1, 2], controller.signal)
+    controller.abort()
+
+    expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(true)
+  })
+
+  it('gives up after REQUEST_TIMEOUT_MS', async () => {
+    // A timeout signal that has already fired, standing in for 10 slow seconds.
+    const timeoutSpy = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(AbortSignal.abort())
+    fetchMock.mockImplementation(hangingFetch)
+
+    await expect(calculate('add', [1, 2])).resolves.toEqual({
+      ok: false,
+      error: { code: 'TIMEOUT', message: 'The calculator service took too long to respond. Please try again.' },
+    })
+    expect(timeoutSpy).toHaveBeenCalledWith(REQUEST_TIMEOUT_MS)
+    expect(REQUEST_TIMEOUT_MS).toBe(10_000)
   })
 
   it('sends one operand for sqrt', async () => {

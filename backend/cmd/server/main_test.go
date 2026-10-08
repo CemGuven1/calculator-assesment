@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -88,6 +89,53 @@ func TestRun(t *testing.T) {
 			err := run(ctx, tc.cfg, discardLogger)
 			if gotErr := err != nil; gotErr != tc.wantErr {
 				t.Errorf("run() error = %v, want error: %t", err, tc.wantErr)
+			}
+		})
+	}
+}
+
+// Uses a directory laid out like the built frontend, and the real file server.
+func TestStaticFiles(t *testing.T) {
+	dir := t.TempDir()
+	for name, content := range map[string]string{
+		"index.html":         "<title>Calculator</title>",
+		"assets/app.js":      "console.log('app')",
+		"assets/icons/a.svg": "<svg/>",
+	} {
+		path := filepath.Join(dir, filepath.FromSlash(name))
+		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	handler, err := newHandler(config{staticDir: dir}, discardLogger)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		path       string
+		wantStatus int
+		wantBody   string
+	}{
+		{"/", 200, "<title>Calculator</title>"},
+		{"/assets/app.js", 200, "console.log('app')"},
+		{"/assets/icons/a.svg", 200, "<svg/>"},
+		// Directories without an index.html are not listed.
+		{"/assets/", 404, "404 page not found\n"},
+		{"/assets/icons/", 404, "404 page not found\n"},
+		{"/missing.js", 404, "404 page not found\n"},
+		// The API keeps its JSON errors.
+		{"/api/nope", 404, `{"error":{"code":"NOT_FOUND","message":"not found"}}` + "\n"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.path, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, tc.path, nil))
+			if rec.Code != tc.wantStatus || rec.Body.String() != tc.wantBody {
+				t.Errorf("GET %s = %d %q, want %d %q", tc.path, rec.Code, rec.Body.String(), tc.wantStatus, tc.wantBody)
 			}
 		})
 	}

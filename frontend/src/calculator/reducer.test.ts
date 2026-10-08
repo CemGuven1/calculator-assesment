@@ -92,7 +92,10 @@ describe('calculatorReducer', () => {
 
       const next = calculatorReducer(state, { type: 'submitted' })
 
-      expect(next.fieldErrors).toEqual({ a: 'Enter a number.', b: 'Use a dot for decimals, like 1.5.' })
+      expect(next.fieldErrors).toEqual({
+        a: 'Enter a number.',
+        b: 'Use a dot for decimals and no thousands separators, like 1500 or 1.5.',
+      })
       expect(next.status).toEqual({ kind: 'idle' })
     })
 

@@ -1,6 +1,7 @@
 package calculator_test
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"testing"
@@ -40,6 +41,32 @@ func TestCalculate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := calculator.Calculate(tc.operation, tc.operands)
 			assertResult(t, got, err, tc.want, tc.wantErr)
+		})
+	}
+}
+
+func TestArity(t *testing.T) {
+	tests := []struct {
+		operation string
+		want      int
+		wantErr   error
+	}{
+		{operation: "add", want: 2},
+		{operation: "subtract", want: 2},
+		{operation: "multiply", want: 2},
+		{operation: "divide", want: 2},
+		{operation: "power", want: 2},
+		{operation: "sqrt", want: 1},
+		{operation: "percentage", want: 2},
+		{operation: "modulo", wantErr: calculator.ErrUnknownOperation},
+		{operation: "", wantErr: calculator.ErrUnknownOperation},
+	}
+	for _, tc := range tests {
+		t.Run(tc.operation, func(t *testing.T) {
+			got, err := calculator.Arity(tc.operation)
+			if !errors.Is(err, tc.wantErr) || got != tc.want {
+				t.Errorf("Arity(%q) = (%d, %v), want (%d, %v)", tc.operation, got, err, tc.want, tc.wantErr)
+			}
 		})
 	}
 }

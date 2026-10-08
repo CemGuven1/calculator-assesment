@@ -41,6 +41,18 @@ describe('Calculator', () => {
       expect(requestBody()).toEqual({ operation: 'add', operands: [2, 3] })
     })
 
+    it('shows every digit of a large whole number', async () => {
+      fetchMock.mockResolvedValue(jsonResponse(200, { result: 1000000000000001 }))
+      const user = renderCalculator()
+
+      await user.type(field('First number'), '1000000000000000')
+      await user.type(field('Second number'), '1')
+      await user.click(calculateButton())
+
+      expect(await screen.findByText('1000000000000001')).toBeInTheDocument()
+      expect(screen.getByRole('status')).toHaveTextContent('1000000000000000 + 1 = 1000000000000001')
+    })
+
     it('shows the result the backend returned, rounded only for display', async () => {
       fetchMock.mockResolvedValue(jsonResponse(200, { result: 0.30000000000000004 }))
       const user = renderCalculator()
@@ -82,7 +94,8 @@ describe('Calculator', () => {
     it.each([
       ['abc', 'Enter a valid number, like -3.5 or 1e3.'],
       ['1.2.3', 'A number can only have one decimal point.'],
-      ['1,5', 'Use a dot for decimals, like 1.5.'],
+      ['1,000', 'Use a dot for decimals and no thousands separators, like 1500 or 1.5.'],
+      ['1e-400', 'This number is too small.'],
     ])('rejects %j with a clear message', async (text, message) => {
       const user = renderCalculator()
 

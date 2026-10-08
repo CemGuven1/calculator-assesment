@@ -7,12 +7,14 @@ const MESSAGES: Record<ErrorCode, string> = {
   DIVISION_BY_ZERO: 'You can’t divide by zero.',
   DOMAIN_ERROR: 'The result isn’t a real number.',
   OVERFLOW: 'The result is too large to calculate.',
-  INVALID_OPERANDS: 'Enter a valid number in each field.',
   UNKNOWN_OPERATION: 'That operation isn’t supported.',
   INTERNAL: 'The calculator service ran into a problem. Please try again.',
   NETWORK_ERROR: 'Can’t reach the calculator service. Check your connection and try again.',
+  TIMEOUT: 'The calculator service took too long to respond. Please try again.',
   BAD_RESPONSE: 'The calculator service is unavailable right now. Please try again.',
-  // These mean the client sent a malformed request, which the user can't fix.
+  // These mean the client sent a request the user can't fix: the inputs are
+  // validated before sending, so INVALID_OPERANDS can only be a client bug.
+  INVALID_OPERANDS: GENERIC,
   INVALID_REQUEST: GENERIC,
   PAYLOAD_TOO_LARGE: GENERIC,
   UNSUPPORTED_MEDIA_TYPE: GENERIC,

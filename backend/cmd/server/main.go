@@ -42,6 +42,9 @@ func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	// After the first signal, restore the default behavior, so a second
+	// Ctrl+C exits at once instead of waiting for the graceful shutdown.
+	context.AfterFunc(ctx, stop)
 	err := run(ctx, loadConfig(os.LookupEnv), logger)
 	stop()
 	if err != nil {
@@ -108,7 +111,7 @@ func newHandler(cfg config, logger *slog.Logger) (http.Handler, error) {
 		if !info.IsDir() {
 			return nil, fmt.Errorf("STATIC_DIR: %s is not a directory", cfg.staticDir)
 		}
-		static = http.FileServer(http.Dir(cfg.staticDir))
+		static = staticFiles(cfg.staticDir)
 	}
 	return api.NewHandler(api.Config{Logger: logger, AllowedOrigins: cfg.corsOrigins, Static: static}), nil
 }

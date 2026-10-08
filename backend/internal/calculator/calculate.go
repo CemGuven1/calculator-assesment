@@ -28,21 +28,32 @@ var operations = map[string]operation{
 // supported lists the operation names in a stable order for error messages.
 var supported = strings.Join(slices.Sorted(maps.Keys(operations)), ", ")
 
-// Calculate applies the named operation to operands. The number of operands
-// must match the operation: one for "sqrt" and two for the others.
-func Calculate(name string, operands []float64) (float64, error) {
+// Arity returns the number of operands the named operation takes: one for
+// "sqrt" and two for the others. It returns ErrUnknownOperation if there is
+// no such operation.
+func Arity(name string) (int, error) {
 	op, ok := operations[name]
 	if !ok {
 		return 0, fmt.Errorf("%w %q; supported operations: %s", ErrUnknownOperation, name, supported)
 	}
-	if len(operands) != op.arity {
+	return op.arity, nil
+}
+
+// Calculate applies the named operation to operands, whose number must match
+// the operation's Arity.
+func Calculate(name string, operands []float64) (float64, error) {
+	arity, err := Arity(name)
+	if err != nil {
+		return 0, err
+	}
+	if len(operands) != arity {
 		noun := "operands"
-		if op.arity == 1 {
+		if arity == 1 {
 			noun = "operand"
 		}
-		return 0, fmt.Errorf("%w: %s expects %d %s, got %d", ErrInvalidOperand, name, op.arity, noun, len(operands))
+		return 0, fmt.Errorf("%w: %s expects %d %s, got %d", ErrInvalidOperand, name, arity, noun, len(operands))
 	}
-	return op.apply(operands)
+	return operations[name].apply(operands)
 }
 
 func unary(fn func(x float64) (float64, error)) operation {

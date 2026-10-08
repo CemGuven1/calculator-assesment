@@ -37,7 +37,7 @@ export type ServerErrorCode =
   | 'INTERNAL'
 
 /** Codes the client uses when there is no usable response from the backend. */
-export type ClientErrorCode = 'NETWORK_ERROR' | 'BAD_RESPONSE'
+export type ClientErrorCode = 'NETWORK_ERROR' | 'TIMEOUT' | 'BAD_RESPONSE'
 
 export type ErrorCode = ServerErrorCode | ClientErrorCode
 

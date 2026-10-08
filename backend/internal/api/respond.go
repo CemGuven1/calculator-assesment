@@ -1,9 +1,11 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/CemGuven1/calculator-assesment/backend/internal/calculator"
@@ -70,13 +72,16 @@ var calculatorErrors = []struct {
 	{calculator.ErrOverflow, http.StatusUnprocessableEntity, codeOverflow},
 }
 
-func calculatorError(err error) *apiError {
+// calculatorError returns the response for err. An error with no mapping
+// above becomes a 500 that hides the details from the client, so they are
+// logged instead.
+func calculatorError(ctx context.Context, logger *slog.Logger, err error) *apiError {
 	for _, m := range calculatorErrors {
 		if errors.Is(err, m.err) {
 			return &apiError{m.status, m.code, err.Error()}
 		}
 	}
-	// Only reachable if the calculator gains an error with no mapping above.
+	logger.ErrorContext(ctx, "calculator error with no API mapping", "err", err)
 	return internalError()
 }
 

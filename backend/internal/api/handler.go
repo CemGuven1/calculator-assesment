@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"path"
 	"strings"
 )
 
@@ -25,9 +26,10 @@ type Config struct {
 // request logging, panic recovery and CORS.
 func NewHandler(cfg Config) http.Handler {
 	logger := cmp.Or(cfg.Logger, slog.Default())
+	h := &handlers{logger: logger}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /api/v1/calculate", calculate)
+	mux.HandleFunc("POST /api/v1/calculate", h.calculate)
 	mux.HandleFunc("GET /health", health)
 
 	// These patterns have no method, so they only receive requests that the
@@ -35,6 +37,7 @@ func NewHandler(cfg Config) http.Handler {
 	// paths then get a JSON error instead of ServeMux's plain-text one.
 	mux.Handle("/api/v1/calculate", methodNotAllowed(http.MethodPost))
 	mux.Handle("/health", methodNotAllowed(http.MethodGet, http.MethodHead))
+	mux.HandleFunc("/api", notFound) // otherwise ServeMux redirects /api to /api/
 	mux.HandleFunc("/api/", notFound)
 	if cfg.Static != nil {
 		mux.Handle("/", cfg.Static)
@@ -42,7 +45,25 @@ func NewHandler(cfg Config) http.Handler {
 		mux.HandleFunc("/", notFound)
 	}
 
-	return logRequests(logger, recoverPanics(logger, cors(cfg.AllowedOrigins, mux)))
+	return logRequests(logger, recoverPanics(logger, cors(cfg.AllowedOrigins, rejectUncleanAPIPaths(mux))))
+}
+
+// handlers holds what the request handlers share.
+type handlers struct {
+	logger *slog.Logger
+}
+
+// rejectUncleanAPIPaths answers API paths such as /api//v1/calculate with a
+// JSON 404. ServeMux would redirect them instead, and a client that follows
+// the redirect turns a POST into a GET.
+func rejectUncleanAPIPaths(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if p := r.URL.Path; strings.HasPrefix(p, "/api/") && path.Clean(p) != p {
+			notFound(w, r)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 type healthResponse struct {
